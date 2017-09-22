@@ -12,22 +12,31 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = Movie.get_ratings
-    if params["ratings"]
-      if params["ratings"]["G"]
-        @title_header_style = "hilite"
+    if params[:sort]
+      session[:sort] = params[:sort]
+    end
+    if params[:ratings]
+      session[:ratings] = params[:ratings]
+    else
+      if !session[:ratings]
+        flash.keep
+        redirect_to movies_path(ratings: Hash[@all_ratings.map { |r| [r, "1"] }])
       end
-    else
-        params["ratings"] = Hash["G", 1]
     end
-    if params[:sort] == "title"
-      @title_header_style = "hilite"
-      @movies = Movie.order(:title)
-    elsif params[:sort] == "release_date"
-      @release_date_style = "hilite"
-      @movies = Movie.order(:release_date)
-    else
-      @movies = Movie.where(:rating => params["ratings"].keys)
+      
+    @movies = Movie.where(:rating => session[:ratings].keys)
+    @checker = session[:ratings]
+    
+    if session[:sort]
+      if session[:sort] == "title"
+        @title_header_style = "hilite"
+        @movies = @movies.order(:title)
+      elsif session[:sort] == "release_date"
+        @release_date_style = "hilite"
+        @movies = @movies.order(:release_date)
+      end
     end
+
   end
 
   def new
